@@ -1,0 +1,2 @@
+only added output of file names to make bad syntax or any errors more accessible, for example. if its main that loads first and its 100 lines total
+then you have 4 other classes that are some amount of lines, you can look at what order they are being loaded and go from there.

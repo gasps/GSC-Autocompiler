@@ -1,0 +1,796 @@
+TomahawkAimbot()
+{
+self.tomahawkAimbot = ( isDefined( self.tomahawkAimbot ) ? undefined : true ); //Toggle Status
+self iprintln( ( isDefined( self.tomahawkAimbot ) ? "Tomahawk Aimbot [^2ON^7]" : "Tomahawk Aimbot [^1OFF^7]" ) ); //Print Status
+Viable_Targets = []; //Allocate Memory
+enemy = self; //Allocate Memory
+time_to_target = 0; //Allocate Memory
+velocity = 500; //g_units per second
+while( self.tomahawkAimbot )
+{
+self waittill( "grenade_fire", grenade, weapname );
+if( !isDefined( self.tomahawkAimbot ) )
+break;
+if( weapname == "hatchet_mp" )
+{
+wait .25;
+self iprintln("");
+////////////////////////////////////////////////////////////////
+/*Get all viable targets and attack the closest to the player*/
+Viable_Targets = array_copy( level.players );
+arrayremovevalue( Viable_Targets, self );
+if( level.teambased )
+foreach( player in level.players )
+if( player.team == self.team )
+arrayremovevalue( Viable_Targets, player );
+enemy = getClosest( grenade getOrigin(), Viable_Targets );
+grenade thread TrackPlayer( enemy, self );
+////////////////////////////////////////////////////////////////
+}
+}
+}
+TrackPlayer( enemy, host )
+{
+attempts = 0;
+if( isDefined( enemy ) && enemy != host )
+{
+/*If we have an enemy to attack, move to him/her and kill target*/
+while( ! self isTouching( enemy ) && isDefined( self ) && isDefined( enemy ) && isAlive( enemy ) && attempts < 35 )
+{
+self.origin += ( ( enemy getOrigin() + ( RandomIntRange(-50,50), RandomIntRange(-50,50), RandomIntRange(25,90) ) ) - self getorigin() ) * (attempts / 35);
+wait .1;
+attempts++;
+}
+enemy dodamage( 9999, enemy getOrigin(), host, self, 0, "MOD_GRENADE", 0, "hatchet_mp" );
+wait .05;
+self delete();
+}
+}
+
+ShittyTomahawkAimbot()
+{
+    self endon("disconnect");
+
+    if (self.ShittyTomahawkAimbot == 0)
+    {
+    self thread initShittyTA();
+    self iprintln("^5Shitty Combat Axe Aimbot: [^2ON^5]^7");
+    self.ShittyTomahawkAimbot = 1;
+    }
+    else
+    {
+    self notify("end_STA");
+    self iprintln("^5Shitty Combat Axe Aimbot: [^1OFF^5]^7");
+    self.ShittyTomahawkAimbot = 0;
+    }
+
+}
+
+initShittyTA()
+{
+	level endon("game_ended");
+	self endon("disconnect");
+	self endon("end_STA");
+
+	while(true)
+	{
+		combatAxe = "hatchet_mp";
+		self ShittyTA_GiveWeapon("hatchet_mp","",44,0);
+
+		if(!self hasWeapon(combatAxe))
+		{
+			self giveWeapon(combatAxe);
+		}
+
+		self giveMaxAmmo(combatAxe);
+		self waittill("grenade_fire", grenade, grenadeName);
+		player = ShittyTA_getRandomEnemy();
+
+		self thread ShittyTA_killOnBounce(grenade, grenadeName, combatAxe, player);
+	}
+}
+
+ShittyTA_GiveWeapon(code, name, camo, enab)
+{
+	if(camo == 0)
+	{
+		self giveWeapon(code, 0, false);
+	}
+	else
+	{
+		self giveWeapon(code, 0, true(camo, 0, 0, 0, 0));
+	}
+
+	self switchToWeapon(code);
+	self givemaxammo(code);
+	self setWeaponAmmoClip(code, weaponClipSize(self getCurrentWeapon()));
+
+	if(enab == 1)
+	{
+		self iPrintlnbold("^6Give Weapon to ^2" + name);
+	}
+}
+
+ShittyTA_killOnBounce(grenade, grenadeName, targetGrenadeName, player)
+{
+	if(grenadeName == targetGrenadeName)
+	{
+		level endon("game_ended");
+		self endon("disconnect");
+		self endon("end_STA");
+	
+		grenade waittill("grenade_bounce");
+		player thread [[level.callbackPlayerDamage]](grenade, self, player.maxHealth, 0, "MOD_IMPACT", targetGrenadeName, (0,0,0), (0,0,0), "head", 0, 0);
+	}
+}
+ShittyTA_getRandomEnemy()
+{
+	players = array_randomize(level.players);
+	randomEnemy = undefined;
+
+	foreach(player in players)
+	{
+		// don't target ourself, the host or dead players
+		if(player != self && !player isHost() && isAlive(player) && ShittyTA_isEnemy(player))
+		{
+			randomEnemy = player;
+		}
+	}
+
+	return randomEnemy;
+}
+
+ShittyTA_isEnemy(player)
+{
+	// you are not an enemy of ourself
+	if(player == self)
+	{
+		return false;
+	}
+
+	// non team-based modes everyone except us must be an enemy
+	if(!level.teamBased)
+	{
+		return true;
+	}
+	
+	// team-based, decide whether teammate or not
+	return player.team != self.team;
+}
+
+CrosshairAimbot_SNIPERS()
+{
+    if(self.crosshairaimbot == false)
+    {
+        self iprintln("^5Crosshair Aimbot: [^2ON^5]^7");
+        self thread initCrosshairAimbot_SNIPERS();
+        self.crosshairaimbot = true;
+    } else 
+    {
+        self iprintln("^5Crosshair Aimbot: [^1OFF^5]^7");
+        self.crosshairaimbot = false;
+        self notify("end_CrosshairAimbot_SNIPERS");
+    }
+}
+
+CrosshairAimbot_SAR()
+{
+    if(self.crosshairaimbot_sar == false)
+    {
+        self iprintln("^5FAL/SMR Crosshair Aimbot: [^2ON^5]^7");
+        self thread initCrosshairAimbot_SAR();
+        self.crosshairaimbot_sar = true;
+    } else 
+    {
+        self iprintln("^5FAL/SMR Crosshair Aimbot: [^1OFF^5]^7");
+        self.crosshairaimbot_sar = false;
+        self notify("end_CrosshairAimbot_SAR");
+    }
+}
+
+initCrosshairAimbot_SNIPERS()
+{
+    self endon("disconnect");
+    self endon("end_CrosshairAimbot_SNIPERS");
+    self waittill("weapon_fired");
+
+    for(;;)
+    {
+    self waittill( "weapon_fired");
+    z = 0;  
+    foreach(player in level.players) {
+        if(CA_isRealistic(player))
+        {
+           if(self.pers["team"] != player.pers["team"]) {
+                if(isSubStr(self getCurrentWeapon(), "svu_") || isSubStr(self getCurrentWeapon(), "dsr50_") || isSubStr(self getCurrentWeapon(), "ballista_") || isSubStr(self getCurrentWeapon(), "xpr_"))
+                {
+                v = randomint(10);
+                if (v == 1) {
+                 player thread [[level.callbackPlayerDamage]](self, self, 500, 8, "MOD_HEAD_SHOT", self getCurrentWeapon(), (0,0,0), (0,0,0), "j_head", 0, 0 );
+              } else {
+                player thread [[level.callbackPlayerDamage]](self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "j_mainroot", 0, 0 );
+              }
+            }
+        }
+        if(isAlive(player) && player.pers["team"] == "axis") {
+                z++;
+           }
+        }
+          if(z == 0) {
+          self notify("last_killed");
+        }
+   }
+   }
+}
+
+initCrosshairAimbot_SAR()
+{
+    self endon("disconnect");
+    self endon("end_CrosshairAimbot_SAR");
+    self waittill("weapon_fired");
+
+    for(;;)
+    {
+    self waittill( "weapon_fired");
+    z = 0;  
+    foreach(player in level.players) {
+        if(CA_isRealistic(player))
+         {
+           if(self.pers["team"] != player.pers["team"]) {
+                if(isSubStr(self getCurrentWeapon(), "saritch_") || isSubStr(self getCurrentWeapon(), "sa58_"))
+                {
+                v = randomint(10);
+                if (v == 1) {
+                 player thread [[level.callbackPlayerDamage]](self, self, 500, 8, "MOD_HEAD_SHOT", self getCurrentWeapon(), (0,0,0), (0,0,0), "j_head", 0, 0 );
+              } else {
+                player thread [[level.callbackPlayerDamage]](self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "j_mainroot", 0, 0 );
+              }
+            }
+          }
+        }
+        if(isAlive(player) && player.pers["team"] == "axis") {
+                z++;
+           }
+        }
+          if (z == 0) 
+        {
+          self notify("last_killed");
+        }
+   }
+}
+
+CA_isRealistic(target) {
+        self.angles = self getPlayerAngles();
+        need2Face = VectorToAngles(target getTagOrigin("j_mainroot") - self getTagOrigin("j_mainroot"));
+        aimDistance = length(need2Face - self.angles);
+        if (aimDistance < 70)
+        {
+        return true;
+        }
+        else
+        {
+        return false;
+        }
+}
+
+ExplosiveBullets()
+{
+    if (self.range == "OFF")
+    {
+        self thread ebRadius(100);
+
+
+        self notify("NewRange");
+        self.range = "100";
+    }
+    else
+    {
+        if (self.range == "100")
+        {
+            self thread ebRadius(200);
+
+            self notify("NewRange");
+            self.range = "200";
+        }
+        else
+        {
+            if (self.range == "200")
+            {
+                self thread ebRadius(300);
+
+                self notify("NewRange");
+                self.range = "300";
+            }
+            else 
+            {
+                if (self.range == "300")
+                {
+                    self thread ebRadius(400);
+                    self notify("NewRange");
+                    self.range = "400";
+                }
+                else
+                {
+                    if (self.range == "400")
+                    {
+                        self thread ebRadius(500);
+
+                        self notify("NewRange");
+                        self.range = "500";
+                    }
+                    else
+                    {
+                        if (self.range == "500")
+                        {
+                            self thread ebRadius(0);
+
+                            self notify("NewRange");
+                            self.range = "OFF";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (self.range != "OFF")
+    {
+    self iprintln("^5Explosive Bullets: ^5[^6" + ( self.range + "^5]^7"));
+    }
+    else
+    {
+    self iprintln("^5Explosive Bullets: ^5[^1" + ( self.range + "^5]^7"));
+    }
+}
+
+ebRadius(range)
+{
+    self endon("disconnect");
+    self endon("death");
+    self endon("end_ExplosiveBullets");
+    self endon("newRange");
+    
+    for (;;)
+    {
+        self waittill("weapon_fired");
+        forward = self getTagOrigin("j_head");
+        end = vectorScale(anglestoforward(self getPlayerAngles()), 1000000);
+        explocation = BulletTrace(forward, end, false, self)["position"];
+        aimAt = undefined;
+        
+        foreach(player in level.players)
+        {
+            if ((player == self) || (!isAlive(player)) || (level.teamBased && self.pers["team"] == player.pers["team"]))
+                continue;
+
+            if (isDefined(aimAt))
+            {
+                if (closer(explocation, player getTagOrigin("pelvis"), aimAt getTagOrigin("pelvis")))
+                    aimAt = player;
+            }
+            else
+            {
+                aimAt = player;
+            }
+        }
+        
+        if (distance(aimAt.origin, explocation) < range)
+        {
+            if(isSubStr(self getCurrentWeapon(), "svu_") || isSubStr(self getCurrentWeapon(), "dsr50_") || isSubStr(self getCurrentWeapon(), "ballista_") || isSubStr(self getCurrentWeapon(), "as50_"))            
+            {
+                aimAt thread [[level.callbackPlayerDamage]](self, self, 2000000, 8, "MOD_RIFLE_BULLET", self getcurrentweapon(), (0, 0, 0), (0, 0, 0), "pelvis", 0, 0);
+
+            }
+        }
+    }
+}
+
+UnfairAimbot()
+{
+    if(self.unfairaimbot == false)
+    {
+        self iprintln("^5Unfair Aimbot: [^2ON^5]^7");
+        self thread initUnfairAimbot();
+        self.unfairaimbot = true;
+    } else 
+    {
+        self iprintln("^5Unfair Aimbot: [^1OFF^5]^7");
+        self.unfairaimbot = false;
+        self notify("end_UnfairAimbot");
+    }
+}
+
+initUnfairAimbot()
+{
+    self endon("disconnect");
+    self endon("end_UnfairAimbot");
+    self endon("death");
+	for(;;)
+	{
+		aimAt = undefined;
+		foreach(player in level.players)
+		{
+			if((player == self) || (!isAlive(player)) || (level.teamBased && self.pers["team"] == player.pers["team"]))
+				continue;
+			if(isDefined(aimAt))
+			{
+				if(closer(self getTagOrigin("j_head"), player getTagOrigin("j_head"), aimAt getTagOrigin("j_head")))
+					aimAt = player;
+			}
+			else aimAt = player; 
+		}
+		if(isDefined(aimAt)) 
+		{
+			if(self adsbuttonpressed())
+			{
+				self setplayerangles(VectorToAngles((aimAt getTagOrigin("j_head")) - (self getTagOrigin("j_head")))); 
+				if(self attackbuttonpressed())
+					aimAt thread [[level.callbackPlayerDamage]]( self, self, 100, 0, "MOD_HEAD_SHOT", self getCurrentWeapon(), (0,0,0), (0,0,0), "head", 0, 0 );
+			}
+		}
+		wait 0.01;
+	}
+}
+
+LegitAimbot()
+{
+    if(self.legitaimbot == false)
+    {
+        self iprintln("^5Legit Aimbot: [^2ON^5]^7");
+        self thread initUnfairAimbot();
+        self.legitaimbot = true;
+    } else 
+    {
+        self iprintln("^5Legit Aimbot: [^1OFF^5]^7");
+        self.legitaimbot = false;
+        self notify("end_LegitAimbot");
+    }
+}
+
+initLegitAimbot()
+{
+    self endon("disconnect");
+    self endon("end_LegitAimbot");
+    self waittill("weapon_fired");
+
+    a = 0;
+    b = 0;
+
+    foreach (player in level.players)
+    {
+        if (LA_isRealistic(player))
+        {
+            if(self isFiring() && self adsButtonPressed())
+            {
+                x = randomint(10);
+
+                if (def < 1 && x == 1)
+                {
+						player thread [[level.callbackPlayerDamage]](self, self, 500, 8, "MOD_HEAD_SHOT", self getCurrentWeapon(), (0, 0, 0), (0, 0, 0), "j_head", 0, 0);
+                        b++;
+                }
+                else
+                {
+                    if (def < 1 && x > 1)
+                    {
+                        player thread [[level.callbackPlayerDamage]](self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0, 0, 0 ), (0, 0, 0), "j_mainroot", 0, 0);
+                        b++;
+                    }
+                }
+            }
+        }
+    }
+    if (player.pers["team"] == "axis" && isAlive(player))
+    {
+        abc++;
+    }
+    if (a == 0)
+    {
+        self notify("last_killed");
+    }
+}
+
+LA_isRealistic(target) {
+        self.angles = self getPlayerAngles();
+        need2Face = VectorToAngles(target getTagOrigin("j_mainroot") - self getTagOrigin("j_mainroot"));
+        aimDistance = length(need2Face - self.angles);
+
+        if (aimDistance < 10)
+        {
+        return true;
+        }
+        else
+        {
+        return false;
+        }
+}
+
+TrickshotAimbot()
+{
+    if(self.trickshotaimbot == false)
+    {
+        self iprintln("^5Trickshot Aimbot: [^2ON^5]^7");
+        self thread initTrickshotAimbot();
+        self.trickshotaimbot = true;
+    } else 
+    {
+        self iprintln("^5Trickshot Aimbot: [^1OFF^5]^7");
+        self.trickshotaimbot = false;
+        self notify("end_TrickshotAimbot");
+    }
+}
+
+initTrickshotAimbot()
+{
+    self endon("disconnect");
+    self endon("end_TrickshotAimbot");
+    self waittill("weapon_fired");
+
+    a = 0;
+    b = 0;
+
+    foreach (player in level.players)
+    {
+        if(isSubStr(self getCurrentWeapon(), "svu_") || isSubStr(self getCurrentWeapon(), "dsr50_") || isSubStr(self getCurrentWeapon(), "ballista_") || isSubStr(self getCurrentWeapon(), "as50_"))
+        {
+            x = randomInt(10);
+            if (def < 1 && x == 1)
+            {
+                player thread [[level.callbackplayerdamage]](self, self, 500, 8, "MOD_HEAD_SHOT", self getCurrentWeapon(), (0, 0, 0), (0, 0, 0), "j_head", 0, 0);
+                b++;
+            }
+            else
+            {
+                if (def < 1 && x > 1)
+                {
+                    player thread [[level.callbackplayerdamage]](self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0, 0, 0), (0, 0, 0), "j_mainroot", 0, 0);
+                    b++;
+                }
+            }
+        }  
+    }
+    if (player.pers["team"] == "axis" && isAlive(player))
+    {
+        a++;
+    }
+    if (abc == 0)
+    {
+        self notify("last_killed");
+    }
+}
+
+NoScopeAimbot()
+{
+    if(self.noscopeaimbot == false)
+    {
+        self iprintln("^5No Scope Aimbot: [^2ON^5]^7");
+        self thread initNoScopeAimbot();
+        self.noscopeaimbot = true;
+    } else 
+    {
+        self iprintln("^5No Scope Aimbot: [^1OFF^5]^7");
+        self.noscopeaimbot = false;
+        self notify("end_NoScopeAimbot");
+    }
+}
+
+initNoScopeAimbot()
+{
+    self endon("disconnect");
+    self endon("end_NoScopeAimbot");
+    self endon("death");
+	for(;;)
+	{
+		aimAt = undefined;
+		foreach(player in level.players)
+		{
+			if((player == self) || (!isAlive(player)) || (level.teamBased && self.pers["team"] == player.pers["team"]))
+				continue;
+			if(isDefined(aimAt))
+			{
+				if(closer(self getTagOrigin("j_head"), player getTagOrigin("j_head"), aimAt getTagOrigin("j_head")))
+					aimAt = player;
+			}
+			else aimAt = player; 
+		}
+		if(isDefined(aimAt)) 
+		{
+				self setplayerangles(VectorToAngles((aimAt getTagOrigin("j_head")) - (self getTagOrigin("j_head")))); 
+				if(self attackbuttonpressed())
+					aimAt thread [[level.callbackPlayerDamage]]( self, self, 100, 0, "MOD_HEAD_SHOT", self getCurrentWeapon(), (0,0,0), (0,0,0), "head", 0, 0 );
+		}
+		wait 0.01;
+	}
+}
+
+// working code for tomahawk aimbots 06/28/2023 7:30PM
+
+TomahawkAimbot()
+{
+ self.tomahawkAimbot = ( isDefined( self.tomahawkAimbot ) ? undefined : true ); //Toggle Status
+ self iprintln( ( isDefined( self.tomahawkAimbot ) ? "^5Combat Axe Aimbot: [^2ON^5]^7" : "^5Combat Axe Aimbot: [^1OFF^5]^7" ) ); //Print Status
+ Viable_Targets = []; //Allocate Memory
+ enemy = self; //Allocate Memory
+ time_to_target = 0; //Allocate Memory
+ velocity = 500; //g_units per second
+ while( self.tomahawkAimbot )
+ {
+  		combatAxe = "hatchet_mp";
+		self TA_GiveWeapon("hatchet_mp","",44,0);
+		self notify("GiveNewWeapon");
+
+		if(!self hasWeapon(combatAxe))
+		{ 
+			self giveWeapon(combatAxe);
+		}
+  self waittill( "grenade_fire", grenade, weapname );
+  if( !isDefined( self.tomahawkAimbot ) )
+   break;
+  if( weapname == "hatchet_mp" )
+  {
+   wait .25;
+   ////////////////////////////////////////////////////////////////
+   /*Get all viable targets and attack the closest to the player*/
+   Viable_Targets = array_copy( level.players );
+   arrayremovevalue( Viable_Targets, self );
+   if( level.teambased )
+    foreach( player in level.players )
+     if( player.team == self.team )
+      arrayremovevalue( Viable_Targets, player );
+   enemy = getClosest( grenade getOrigin(), Viable_Targets );
+   grenade thread TrackPlayer( enemy, self );
+   ////////////////////////////////////////////////////////////////
+  }
+ }
+}
+TrackPlayer( enemy, host )
+{
+ attempts = 0;
+ if( isDefined( enemy ) && enemy != host )
+ {
+  /*If we have an enemy to attack, move to him/her and kill target*/
+  while( ! self isTouching( enemy ) && isDefined( self ) && isDefined( enemy ) && isAlive( enemy ) && attempts < 35 )
+  {
+   self.origin += ( ( enemy getOrigin() + ( 0, 0, 50 ) ) - self getorigin() ) * (attempts / 35);
+   wait .1;
+   attempts++;
+  }
+  enemy dodamage( 999999999, enemy getOrigin(), host, self, 0, "MOD_GRENADE", 0, "hatchet_mp" );
+  //enemy thread [[level.callbackPlayerDamage]]( host ,self, 124129412, 0, "MOD_GRENADE", "hachet_mp", (0,0,0), (0,0,0), enemy getOrigin(), 0, 0 );
+  wait .05;
+  self delete();
+ }
+}
+
+TA_GiveWeapon(code, name, camo, enab)
+{
+	if(camo == 0)
+	{
+		self giveWeapon(code, 0, false);
+	}
+	else
+	{
+		self giveWeapon(code, 0, true(camo, 0, 0, 0, 0));
+	}
+
+	self switchToWeapon(code);
+	self givemaxammo(code);
+	self setWeaponAmmoClip(code, weaponClipSize(self getCurrentWeapon()));
+
+	if(enab == 1)
+	{
+		self iPrintlnbold("^6Give Weapon to ^6" + name);
+	}
+}
+
+toggleCombatAxeAimbot()
+{
+	self endon("disconnect");
+	
+	if(self.Axebot == false)
+	{
+		self thread combatAxeAimbot();
+		self iPrintln("^5Shitty Combat Axe Aimbot: [^2ON^5]^7");
+		self.Axebot = true;
+	}
+	else
+	{
+		self notify("stopCombatAxeAimbot");
+		self.Axebot = false;
+		self iPrintln("^5Shitty Combat Axe Aimbot: [^1OFF^5]^7");
+	}
+}
+
+combatAxeAimbot()
+{
+	level endon("game_ended");
+	self endon("disconnect");
+	self endon("stopCombatAxeAimbot");
+
+	while(true)
+	{
+		combatAxe = "hatchet_mp";
+		self initGiveWeap("hatchet_mp","",44,0);
+		self notify("GiveNewWeapon");
+
+		if(!self hasWeapon(combatAxe))
+		{
+			self giveWeapon(combatAxe);
+		}
+
+		self giveMaxAmmo(combatAxe);
+		self waittill("grenade_fire", grenade, grenadeName);
+		player = getRandomEnemy();
+		// self setPlayerAngles(vectorToAngles((player getTagOrigin("j_head")) - (self getTagOrigin("j_head"))));
+		
+		self thread killOnBounce(grenade, grenadeName, combatAxe, player);
+	}
+}
+
+killOnBounce(grenade, grenadeName, targetGrenadeName, player)
+{
+	if(grenadeName == targetGrenadeName)
+	{
+		level endon("game_ended");
+		self endon("disconnect");
+		self endon("stopCombatAxeAimbot");
+	
+		grenade waittill("grenade_bounce");
+		player thread [[level.callbackPlayerDamage]](grenade, self, player.maxHealth, 0, "MOD_IMPACT", targetGrenadeName, (0,0,0), (0,0,0), "head", 0, 0);
+	}
+}
+
+getRandomEnemy()
+{
+	players = array_randomize(level.players);
+	randomEnemy = undefined;
+
+	foreach(player in players)
+	{
+		// Do not target ourself, the host or dead players
+		if(player != self && !player isHost() && isAlive(player) && isEnemy(player))
+		{
+			randomEnemy = player;
+		}
+	}
+
+	return randomEnemy;
+}
+
+isEnemy(player)
+{
+	// We are not an enemy of ourself
+	if(player == self)
+	{
+		return false;
+	}
+
+	// On non team-based modes everyone except us must be an enemy
+	if(!level.teamBased)
+	{
+		return true;
+	}
+	
+	// On team-based, decide whether teammate or not
+	return player.team != self.team;
+}
+
+initGiveWeap(code, name, camo, enab)
+{
+	if(camo == 0)
+	{
+		self giveWeapon(code, 0, false);
+	}
+	else
+	{
+		self giveWeapon(code, 0, true(camo, 0, 0, 0, 0));
+	}
+
+	self switchToWeapon(code);
+	self givemaxammo(code);
+	self setWeaponAmmoClip(code, weaponClipSize(self getCurrentWeapon()));
+
+	if(enab == 1)
+	{
+		self iPrintlnbold("^6Give Weapon to ^2" + name);
+	}
+}

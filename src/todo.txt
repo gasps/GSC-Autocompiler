@@ -1,0 +1,24 @@
+take gsc decompiler into visual studio and run it in debug mode so you can decompile solitary beta fixed
+
+fix nacbind
+fix sky barriers not being removed
+
+ // still do 07-02-23
+ - update all toggle functions boolean from 0/1 to true/false
+ - move all boolean values to the top in toggle functions (to prevent crashing more often)
+
+
+
+
+// already done 07-01-23
+remove uav method from src and add it to menu
+fix colors and syntax for text when enabled etc
+if you want change the bots name (bookmarks tab)
+
+use same esp method just change esp model
+
+esp is different from newer method (if you want switch to original to get cooler esp)
+
+advanced ufo, you are suppose to fly, somehow fix that (FIX METHOD: REPLACE WITH NEWER METHOD IN PLUTO SRC).
+
+you also forgot spinbot i guess LMAO
