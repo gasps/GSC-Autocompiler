@@ -15,7 +15,7 @@ try
         Write-Output "Loading main"
         get-content .\src\main.gsc > result-uncompiled.gsc
         Write-Output "Main file Loaded"
-        Write-Output "Lodading other files"
+        Write-Output "Loading other files"
         Get-ChildItem -Path .\src -Filter *gsc -Exclude main.gsc -Recurse | ForEach-Object {
             try {
                 Get-Content $_.FullName >> result-uncompiled.gsc
